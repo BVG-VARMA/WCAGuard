@@ -1,0 +1,37 @@
+{
+  "name": "wcaguard",
+  "version": "1.0.0",
+  "description": "WCAGuard - Find it. Fix it. Prove it. Automated WCAG accessibility violation detection, source code auto-fixing, verification, and cryptographic certification.",
+  "type": "module",
+  "bin": {
+    "wcaguard": "./server/src/cli.js"
+  },
+  "workspaces": [
+    "server",
+    "client",
+    "demo-app",
+    "babel-plugin-data-loc"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "server": "npm --workspace=server run dev",
+    "server:start": "npm --workspace=server run start",
+    "client": "npm --workspace=client run dev",
+    "demo": "npm --workspace=demo-app run dev",
+    "seed": "node scripts/seed-demo.js http://localhost:5173",
+    "clean:data": "node scripts/clean-data.js",
+    "build:client": "npm --workspace=client run build",
+    "build:demo": "npm --workspace=demo-app run build"
+  },
+  "keywords": [
+    "wcag",
+    "accessibility",
+    "a11y",
+    "axe-core",
+    "playwright",
+    "babel-ast",
+    "remediation"
+  ],
+  "author": "WCAGuard Team",
+  "license": "MIT"
+}

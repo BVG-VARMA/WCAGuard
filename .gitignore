@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+
+# Local storage data
+data/*
+!data/scans/.gitkeep
+!data/reports/.gitkeep
+!data/tmp/.gitkeep

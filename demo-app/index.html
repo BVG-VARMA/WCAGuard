@@ -1,0 +1,363 @@
+<!--
+This is an intentionally inaccessible demo file for testing WCAGuard.
+Do not use this file as an accessibility example in a real website.
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LearnSmart Online Courses</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f6fa;
+      color: #1f2937;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    header.site-top {
+      background: #1e3a8a;
+      color: #fff;
+      padding: 20px 24px;
+    }
+
+    header.site-top h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .hero-image {
+      background: #dbeafe;
+      min-height: 300px;
+      display: block;
+      width: 100%;
+      max-width: 900px;
+      height: 300px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    section {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .1);
+    }
+
+    .low-contrast {
+      color: #4b5563;
+      background-color: #ffffff;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .search-bar input[type="text"] {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .search-button {
+      background: #e5e7eb;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    #email {
+      padding: 8px;
+      width: 260px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .newsletter button.subscribe {
+      padding: 8px 14px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+    }
+
+    .tiny-button {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      font-size: 8px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    td {
+      border: 1px solid #d1d5db;
+      padding: 8px;
+    }
+
+    .moving-area {
+      position: relative;
+      height: 80px;
+      background: #111827;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .moving-ball {
+      position: absolute;
+      top: 24px;
+      left: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #f59e0b;
+      animation: slide 3s linear infinite alternate;
+    }
+
+    @keyframes slide {
+      from {
+        left: 0;
+      }
+
+      to {
+        left: calc(100% - 32px);
+      }
+    }
+
+    video {
+      width: 100%;
+      max-height: 200px;
+      background: #000;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+
+  <script>
+    let isReadingPage = false;
+    let currentSpeechIndex = 0;
+    let readableElements = [];
+
+
+
+    // Individual element click/focus speech (skips completely if no description)
+    function speakAlt(el) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+
+      const description = (el.getAttribute('alt') || el.getAttribute('aria-label') || '').trim();
+      // If the image has no description, SKIP IT completely (silent, do not detect)
+      if (!description) {
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance("Image: " + description);
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Page Reader / Narrator: Reads the page aloud sequentially, skipping images without description
+    function togglePageReader() {
+      if (!window.speechSynthesis) {
+        alert("Web Speech API is not supported in this browser.");
+        return;
+      }
+
+      const btnText = document.getElementById('reader-btn-text');
+
+      if (isReadingPage) {
+        window.speechSynthesis.cancel();
+        isReadingPage = false;
+        if (btnText) btnText.textContent = 'Read Page Aloud';
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+      isReadingPage = true;
+      if (btnText) btnText.textContent = 'Stop Reading';
+
+      // Gather readable sections and headings
+      const nodes = document.querySelectorAll('header.site-top h1, section h4, section p, img, table td, button.subscribe');
+      readableElements = Array.from(nodes).filter(el => {
+        // If image has NO description (alt), SKIP IT from narration completely
+        if (el.tagName === 'IMG') {
+          const desc = (el.getAttribute('alt') || el.getAttribute('aria-label') || '').trim();
+          return Boolean(desc);
+        }
+        return el.offsetParent !== null; // visible elements only
+      });
+
+      currentSpeechIndex = 0;
+      speakNextElement();
+    }
+
+    function speakNextElement() {
+      if (!isReadingPage || currentSpeechIndex >= readableElements.length) {
+        isReadingPage = false;
+        const btnText = document.getElementById('reader-btn-text');
+        if (btnText) btnText.textContent = 'Read Page Aloud';
+        return;
+      }
+
+      const el = readableElements[currentSpeechIndex];
+      let text = '';
+
+      if (el.tagName === 'IMG') {
+        const desc = (el.getAttribute('alt') || el.getAttribute('aria-label') || '').trim();
+        // If image has NO description, SKIP IT completely and continue to next element
+        if (!desc) {
+          currentSpeechIndex++;
+          speakNextElement();
+          return;
+        }
+        text = 'Image: ' + desc;
+      } else {
+        text = el.innerText || el.textContent || '';
+      }
+
+      if (!text.trim()) {
+        currentSpeechIndex++;
+        speakNextElement();
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text.trim());
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+
+      utterance.onend = () => {
+        currentSpeechIndex++;
+        speakNextElement();
+      };
+
+      utterance.onerror = () => {
+        currentSpeechIndex++;
+        speakNextElement();
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Keyboard shortcut (Alt + R) to toggle Narrator / Page Reader
+    window.addEventListener('keydown', (e) => {
+      if (e.altKey && (e.key === 'r' || e.key === 'R')) {
+        e.preventDefault();
+        togglePageReader();
+      }
+    });
+  </script>
+
+  <header class="site-top"
+    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+    <h1>LearnSmart Online Courses</h1>
+    <button id="page-reader-btn" type="button" onclick="togglePageReader()"
+      style="background: #2563eb; color: #fff; border: 1px solid #60a5fa; border-radius: 6px; padding: 8px 14px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 13px;">
+      <span>🔊</span> <span id="reader-btn-text">Read Page Aloud</span>
+    </button>
+  </header>
+
+  <div class="container">
+
+    <section>
+      <h4>Featured Course: Web Development Basics</h4>
+      <p>Learn to build modern websites from scratch with hands-on projects, expert mentors, and flexible schedules that
+        fit your life.</p>
+      <p class="low-contrast">Important information for all students.</p>
+    </section>
+
+    <section>
+      <div class="search-bar">
+        <input type="text" placeholder="Search courses">
+        <button aria-label="Action description" class="search-button"><span aria-hidden="true">🔍</span></button>
+      </div>
+    </section>
+    <div style="position: relative; max-width: 900px; margin: 0 auto;">
+      <img id="hero-img" src="/blue-lock.png" class="hero-image" onclick="speakAlt(this)">
+
+    </div>
+
+    <section class="newsletter">
+      <h4>Stay Updated</h4>
+      <label for="email">Email Address</label>
+      <input type="email" id="email" placeholder="Enter your email">
+      <button class="subscribe" type="button">Subscribe</button>
+    </section>
+
+    <section>
+      <p>Our most popular course has helped thousands of learners.</p>
+      <a href="#details">Click here</a>
+    </section>
+
+    <section>
+      <h4>Quick Purchase</h4>
+      <button class="tiny-button">Buy</button>
+    </section>
+
+    <section id="prices">
+      <table>
+        <tr>
+          <td>HTML &amp; CSS</td>
+          <td>4 weeks</td>
+          <td>$49</td>
+        </tr>
+        <tr>
+          <td>JavaScript Essentials</td>
+          <td>6 weeks</td>
+          <td>$79</td>
+        </tr>
+        <tr>
+          <td>Python for Beginners</td>
+          <td>5 weeks</td>
+          <td>$69</td>
+        </tr>
+        <tr>
+          <td>Data Analysis</td>
+          <td>8 weeks</td>
+          <td>$99</td>
+        </tr>
+      </table>
+    </section>
+
+    <section>
+      <h4>Course Preview</h4>
+      <video autoplay muted loop playsinline>
+        <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+      </video>
+      <div class="moving-area" style="margin-top:16px;">
+        <div class="moving-ball"></div>
+      </div>
+    </section>
+
+    <section id="details">
+      <h4>Course Details</h4>
+      <p>Includes lifetime access, certificates, and community support.</p>
+    </section>
+
+  </div>
+</body>
+
+</html>

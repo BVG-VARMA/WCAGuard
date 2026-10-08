@@ -1,0 +1,50 @@
+name: WCAGuard Accessibility Gate
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+jobs:
+  accessibility-audit:
+    name: WCAG Compliance & Accessibility Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          npm ci || npm install
+          npx playwright install --with-deps chromium
+
+      - name: Build and Start Application
+        run: |
+          npm run build
+          npm run preview -- --port 5173 &
+          npx wait-on http://localhost:5173 --timeout 30000
+
+      - name: Run WCAGuard Automated Scan
+        id: wcaguard_scan
+        run: |
+          npx wcaguard scan http://localhost:5173 > scan_output.txt
+          cat scan_output.txt
+
+      - name: Evaluate Score Threshold Gate
+        run: |
+          SCORE=$(grep "Accessibility Score:" scan_output.txt | awk '{print $3}')
+          echo "Current Accessibility Score: $SCORE / 100"
+          THRESHOLD=80
+          if [ "$SCORE" -lt "$THRESHOLD" ]; then
+            echo "❌ Pull Request Failed: WCAG Accessibility Score ($SCORE) is below required quality gate ($THRESHOLD)!"
+            exit 1
+          fi
+          echo "✅ WCAG Quality Gate Passed: Score ($SCORE) >= Threshold ($THRESHOLD)"

@@ -1,0 +1,8 @@
+{
+  "name": "babel-plugin-data-loc",
+  "version": "1.0.0",
+  "description": "Babel plugin that stamps JSX elements with data-loc='file:line' for exact accessibility violation mapping",
+  "main": "index.js",
+  "type": "module",
+  "license": "MIT"
+}
